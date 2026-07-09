@@ -107,6 +107,9 @@ uvx pre-commit run --all-files
 # run the example module to verify the environment (.venv/)
 uv run python -m bizintel.app_case
 
+# run the example module to explore cleaning
+uv run python -m bizintel.data_prep_case
+
 # run common chores
 uv run ruff format .
 uv run ruff check . --fix
@@ -140,9 +143,41 @@ Press `Ctrl+c` (both keys together) or `Ctrl+Z` then `Enter` on Windows.
 ## Example Output (Remove this Section after You Verify)
 
 ```shell
-| INFO | ML | ========================
-| INFO | ML | Executed successfully!
-| INFO | ML | ========================
+| INFO | BI | Numeric summary: products prepared
+| INFO | BI |
+       ProductID  UnitPrice
+count     100.00     100.00
+mean     2049.50     507.77
+std        29.01     290.80
+min      2000.00      13.51
+25%      2024.75     255.53
+50%      2049.50     496.39
+75%      2074.25     771.28
+max      2099.00     976.44
+| INFO | BI | Numeric summary: sales prepared
+| INFO | BI |
+       TransactionID  CustomerID  ProductID  StoreID  CampaignID  SaleAmount
+count        2392.00     2392.00    2392.00  2392.00     2199.00     2392.00
+mean         1199.03     1086.63    2049.09   402.53        1.46     1535.70
+std           692.43       57.30      28.68     1.12        1.12     1270.88
+min             1.00     1000.00    2000.00   401.00        0.00        0.00
+25%           600.75     1034.00    2023.00   402.00        0.00      593.15
+50%          1198.50     1079.00    2046.00   403.00        1.00     1240.37
+75%          1798.25     1131.25    2074.00   404.00        2.00     1923.22
+max          2400.00     1199.00    2099.00   404.00        3.00     4993.88
+| INFO | BI | Task 8. SAVE PREPARED DATASETS........
+| INFO | BI | Saved customers
+| INFO | BI |   Rows: 200
+| INFO | BI |   Path: data\prepared\customers_data_prepared.csv
+| INFO | BI | Saved products
+| INFO | BI |   Rows: 100
+| INFO | BI |   Path: data\prepared\products_data_prepared.csv
+| INFO | BI | Saved sales
+| INFO | BI |   Rows: 2392
+| INFO | BI |   Path: data\prepared\sales_data_prepared.csv
+| INFO | BI | Workflow complete
+| INFO | BI | ========================
+| INFO | BI | Executed successfully!
 ```
 
 ## Findings and Visuals
