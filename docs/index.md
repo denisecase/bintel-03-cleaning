@@ -37,69 +37,47 @@ Was it easy, or surprisingly challenging and why do you think so?
 
 ## Phase 5. Custom Project
 
-Describe your custom project and how you made your modeling decisions.
-
-Be specific about what changed from the example project.
+Describe your custom data cleaning and preparation work.
 
 ### Basis and Data
 
-Describe the dataset, input, or example you started with.
+Describe the raw data you started with.
 
 Include:
 
-- The original example dataset or input
-- The data source
-- Why you chose it, kept it, or changed it
-- Any important limitations or assumptions
+- The three smart sales data files and their known quality issues
+- Which issues you chose to address and which you deferred
+- Any important assumptions about what counts as valid data
 
-### Modeling Approach
+### Cleaning Approach
 
-Describe the problem type and modeling approach for this project.
-
-Include:
-
-- Is this supervised or unsupervised and how do you know
-- Is this classification, regression, clustering, recommendation, forecasting, or another type of ML task
-- What kind of target works well for this approach
-- Why your selected model or method is appropriate
-
-### Target
-
-Describe the example target variable.
-
-Then describe your chosen target variable.
-
-Explain how your target choice changes the modeling approach, interpretation, or evaluation.
-
-### Features
-
-Describe the example features.
-
-Then describe the features you used to predict your target.
-
-Explain what you changed, added, removed, or kept and why.
-
-### Evaluation and Results
-
-Describe how you evaluated your model.
+Describe the ETVL preparation steps you implemented.
 
 Include:
 
-- The metric or evidence you used
-- The main result
-- Whether the result was useful, interesting, surprising, or disappointing
-- Any weakness, limitation, or next improvement
+- What cleaning steps you applied to each table
+- What custom cleaning logic you added beyond the example
+- How you verified the data was clean before saving
+
+### Before and After
+
+Describe the impact of your cleaning work.
+
+Include:
+
+- How many rows were removed or corrected in each table
+- What the data looked like before and after (use screenshots or log output)
+- Whether any cleaning decisions were judgment calls and why you made them
 
 ### Summary
 
-Summarize your custom project.
+Summarize your custom cleaning work.
 
 Include:
 
-- How you implemented your custom model
-- What results you got
-- What you learned
-- How well you exercised the skills covered in this project
-- What kinds of real problems you could apply these skills to in the future
+- What you implemented beyond the example
+- What the prepared data looks like
+- What you learned about data quality
+- What kinds of real business problems data cleaning enables
 
-Display at least one image or screenshot showing your work.
+Display at least one chart or screenshot showing your before and after results.

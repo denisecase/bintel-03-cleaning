@@ -11,9 +11,9 @@
 cff-version: "1.2.0"
 type: software
 
-title: "ml-03-classification"
+title: "bintel-03-cleaning"
 version: "0.1.0"
-date-released: "2026-06-16"
+date-released: "2026-06-28"
 
 authors:
   - family-names: Case
@@ -21,23 +21,25 @@ authors:
     orcid: "https://orcid.org/0000-0001-6165-7389"
     affiliation: "Northwest Missouri State University, School of Computer Science and Information Systems, Maryville, MO, USA"
 
-repository-code: "https://github.com/denisecase/ml-03-classification"
-url: "https://github.com/denisecase/ml-03-classification"
+repository-code: "https://github.com/denisecase/bintel-03-cleaning"
+url: "https://github.com/denisecase/bintel-03-cleaning"
 license: MIT
 
 abstract: >
-  Machine learning project.
-  Learn to build and evaluate classification models,
-  interpret confusion matrices and classification reports,
-  and select a classifier based on the problem and data.
+  Business intelligence project.
+  Learn to clean and prepare raw smart sales data for ETVL,
+  including removing duplicates, standardizing values,
+  handling invalid dates and amounts,
+  and verifying data quality before saving prepared files.
 
 keywords:
-  - data analytics
-  - notebooks
-  - machine learning
-  - classification
-  - computer-science-education
-  - data-analytics-education
+  - business-intelligence
+  - data-cleaning
+  - data-preparation
+  - etvl
+  - etl
+  - smart-sales
+  - data-quality
   - professional-python
   - reproducible-workflows
   - ci-cd
@@ -45,9 +47,9 @@ keywords:
   - software-quality
   - professional-practice
   - python
-  - jupyter
   - pandas
-  - scikit-learn
+  - matplotlib
+  - seaborn
   - git
   - github
   - open-source

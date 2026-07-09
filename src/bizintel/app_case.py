@@ -1,20 +1,19 @@
 """app_case.py - example.
 
-An example of a supervised regression case.
-This app is used to verify project workflow.
+An example of loading and visualizing raw business data.
 
 Author: Denise Case
 Date: 2026-06
 
 Process:
-    - Load a CSV dataset.
-    - Train a supervised regression model.
-    - Evaluate model performance.
-    - Predict one new case.
-    - Create useful charts.
+    - Load raw CSV data files.
+    - Visualize sales by region and product category.
+    - Log a summary of findings.
 
 Data Source:
-- data/raw/hours_scores_case.csv
+- data/raw/customers_data.csv
+- data/raw/products_data.csv
+- data/raw/sales_data.csv
 
 Terminal command to run this file from the root project folder:
 
@@ -22,307 +21,309 @@ uv run python -m bizintel.app_case
 
 OBS:
   Don't edit this file - it should remain a working example.
-  It is used in each module to test the installation and workflow.
-  You never need to do anything with it, but if would like,
-  you can copy it, rename it, and modify your copy.
+  Copy it, rename it with your alias, and modify your copy.
   If you do, include your command to run it in the docstring above and in README.md.
 """
 
-# === Section 1a. DECLARE IMPORTS (BRING IN FREE CODE) ===
+# === DECLARE IMPORTS (bring in free code from elsewhere) ===
 
-import logging
+from pathlib import Path
 from typing import Final
 
-from datafun_toolkit.logger import get_logger, log_header
-from matplotlib.axes import Axes
+from datafun_toolkit.logger import log_path
 import matplotlib.pyplot as plt
 import pandas as pd
-import seaborn as sns
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_absolute_error, r2_score
-from sklearn.model_selection import train_test_split
 
-# === Section 1b. CONFIGURE LOGGER ONCE PER MODULE ===
+from bizintel.utils_data import (
+    load_data,
+)
+from bizintel.utils_logger import LOG, log_header
+from bizintel.utils_viz import plot_bar
 
-LOG: logging.Logger = get_logger("ML", level="DEBUG")
-log_header(LOG, "ML")
+# === DECLARE GLOBAL CONSTANTS AND CONFIGURATION ===
 
-# === Section 1c. Global Constants and Configuration ===
+# In Python, a constant is a variable that should not change after it is defined.
+# We indicate this with all capital letters and the Final type hint from the typing module.
 
-DATASET_NAME: Final[str] = "hours_scores_case"
+# Raw data folder path (relative to the root project folder).
+DATA_RAW: Final[Path] = Path("data/raw")
 
-# Important: Inspect your dataset to identify feature and target column names.
-# Raw data is typically in data/raw.
-# You can assume this data has already been cleaned and preprocessed for modeling,
-# but you should still inspect it to understand the column names and data types.
-
-# STEP 1. Pick the target variable we want to predict.
-
-TARGET_COL: Final[str] = "score"
-
-# STEP 2. Define the column names (features) that may help predict the target variable.
-
-FEATURE_COLS: Final[list[str]] = [
-    "hours_studied",
-    "practice_quizzes",
-    "attendance_pct",
-    "sleep_hours",
-    "prior_score",
-]
-
-# STEP 3. Define the test size and random state for reproducibility.
-
-# For a small dataset, use a larger test size (e.g., 0.30 or 0.40)
-# to get a more reliable estimate of model performance.
-
-# 0.30 means: hold back 30% of the records for testing, and train the model on the other 70%.
-# So for every 10 records:
-# 7 records -> training
-# 3 records -> testing
-
-# The model learns from the training records,
-# then we check how well it predicts the test records it did not train on.
-
-TEST_SIZE: Final[float] = 0.30
-RANDOM_STATE: Final[int] = 42
-
-# RANDOM_STATE controls the random split.
-# Without it, every run might choose a different 70/30 split.
-# With it, we get the same split every time, so results always match.
-# The value 42 is arbitrary and conventional. We can choose any integer.
-
-# === Section 1d. Pandas Configuration for Display ===
-
-pd.set_option("display.max_columns", 50)
-pd.set_option("display.width", 120)
+# The three raw data files for the smart sales project.
+CUSTOMERS_FILE: Final[Path] = DATA_RAW / "customers_data.csv"
+PRODUCTS_FILE: Final[Path] = DATA_RAW / "products_data.csv"
+SALES_FILE: Final[Path] = DATA_RAW / "sales_data.csv"
 
 
-# === Section 2. Load the Data ===
+# === Section 2. Define Reusable Functions ===
+
+# === Section 2.1 DEFINE A SALES BY REGION FUNCTION ===
+
+# Define a reusable function that takes
+# the customers and sales DataFrames as input
+# and returns a DataFrame with total sales by region.
+# A pandas DataFrame is like a sheet - two-dimensional data with rows and columns.
 
 
-def load_data() -> pd.DataFrame:
-    """Load the case dataset from the data/raw folder."""
-    LOG.info(f"Loading dataset: {DATASET_NAME}")
+def sales_by_region(
+    df_customers: pd.DataFrame,
+    df_sales: pd.DataFrame,
+) -> pd.DataFrame:
+    """Aggregate total sales amount by customer region.
 
-    df: pd.DataFrame = pd.read_csv(f"data/raw/{DATASET_NAME}.csv")
+    Args:
+        df_customers: Customers DataFrame with CustomerID and Region columns.
+        df_sales: Sales DataFrame with CustomerID and SaleAmount columns.
 
-    LOG.info(f"Loaded: {df.shape[0]} rows, {df.shape[1]} columns")
-    LOG.debug(f"\n{df.head()}")
+    Returns:
+        DataFrame with Region and SaleAmount columns, sorted by SaleAmount.
+    """
+    LOG.info("Aggregating sales by region")
 
-    return df
+    # Make a copy of the sales DataFrame to avoid modifying the original
+    df_sales = df_sales.copy()
 
+    # Convert the SaleAmount column to numeric, coercing errors to NaN ("not a number")
+    df_sales["SaleAmount"] = pd.to_numeric(df_sales["SaleAmount"], errors="coerce")
 
-# === Section 3. Inspect Data Shape and Structure ===
-
-
-def inspect_basic(df: pd.DataFrame) -> None:
-    """Inspect basic dataset structure."""
-    LOG.info("Column names")
-    LOG.debug(f"{list(df.columns)}")
-
-    LOG.info("DataFrame info")
-    df.info()
-
-    LOG.info(f"Dataset shape: {df.shape[0]} rows, {df.shape[1]} columns")
-
-
-# === Section 4. Check Data Quality ===
-
-
-def check_quality(df: pd.DataFrame) -> None:
-    """Check missing values and duplicate rows."""
-    LOG.info("Missing values by column")
-    LOG.debug(f"\n{df.isna().sum()}")
-
-    duplicate_count: int = df.duplicated().sum()
-    LOG.info(f"Duplicate row count: {duplicate_count}")
-
-
-# === Section 5. Create a Clean View ===
-
-
-def make_clean_view(df: pd.DataFrame) -> pd.DataFrame:
-    """Create a cleaned view for modeling."""
-    LOG.info("Creating clean modeling view")
-
-    selected_cols: list[str] = FEATURE_COLS + [TARGET_COL]
-
-    # Select only the columns we need.
-    df_selected: pd.DataFrame = df[selected_cols]  # type: ignore[assignment]
-
-    # Drop rows with any missing values.
-    df_no_missing: pd.DataFrame = df_selected.dropna()
-
-    # Assign a copy of the no-missing DataFrame to df_clean to avoid SettingWithCopyWarning.
-    df_clean: pd.DataFrame = df_no_missing.copy()
-
-    LOG.info(f"Clean view: {df_clean.shape[0]} rows, {df_clean.shape[1]} columns")
-    return df_clean
-
-
-# === Section 6. Train Supervised Model ===
-
-
-def train_model(df_clean: pd.DataFrame) -> LinearRegression:
-    """Train a supervised regression model."""
-    LOG.info("Training LinearRegression model")
-
-    x = df_clean[FEATURE_COLS]
-    y = df_clean[TARGET_COL]
-
-    x_train, x_test, y_train, y_test = train_test_split(
-        x,
-        y,
-        test_size=TEST_SIZE,
-        random_state=RANDOM_STATE,
+    # Merge the sales DataFrame with the customers DataFrame on CustomerID
+    # to get the Region for each sale (like a "left join" in SQL)
+    # A left join means we keep all rows from df_sales and add matching Region values from df_customers.
+    df_merged: pd.DataFrame = df_sales.merge(
+        df_customers[["CustomerID", "Region"]],
+        on="CustomerID",
+        how="left",
     )
 
-    model = LinearRegression()
-    model.fit(x_train, y_train)
+    # Clean up the Region column by stripping whitespace and capitalizing each word
+    df_merged["Region"] = df_merged["Region"].str.strip().str.title()
 
-    y_pred = model.predict(x_test)
+    # Group the merged DataFrame by Region and sum the SaleAmount for each region.
+    # This returns a Series (a single column of values, one per region).
+    # We cast to Series because we are grouping a single column.
+    grouped: pd.Series = pd.Series(df_merged.groupby("Region")["SaleAmount"].sum())
 
-    mae: float = mean_absolute_error(y_test, y_pred)
-    r2: float = r2_score(y_test, y_pred)
-
-    LOG.info(f"Mean absolute error: {mae:.2f}")
-    LOG.info(f"R-squared: {r2:.2f}")
-
-    return model
-
-
-# === Section 7. Predict One New Case ===
-
-
-def predict_example(model: LinearRegression) -> None:
-    """Use the trained model to predict one new student score."""
-    LOG.info("Predicting one new case")
-
-    new_case = pd.DataFrame(
-        [
-            {
-                "hours_studied": 6.5,
-                "practice_quizzes": 4,
-                "attendance_pct": 92,
-                "sleep_hours": 7.0,
-                "prior_score": 72,
-            }
-        ]
+    # Reset the index to turn the Series back into a DataFrame with two columns:
+    # Region and SaleAmount.
+    # Then sort by SaleAmount descending so the highest-revenue region appears first.
+    df_region: pd.DataFrame = grouped.reset_index().sort_values(
+        "SaleAmount", ascending=False
     )
 
-    predicted_score: float = model.predict(new_case)[0]
+    # Use the built-in dataframe iloc (index location) method
+    # to get the first row of the sorted DataFrame (the region with the highest sales)
+    # as a string.
+    # In Python, we start counting with 0
+    # (no offset from the beginning of the list),
+    # so the first row is at index 0.
+    top_region: str = str(df_region.iloc[0]["Region"])
 
-    LOG.info(f"New case:\n{new_case}")
-    LOG.info(f"Predicted score: {predicted_score:.1f}")
+    # Use the built-in dataframe iloc (index location) method
+    # to get the first row of the sorted DataFrame
+    # (the region with the highest sales)
+    # as a float.
+    top_sales: float = float(df_region.iloc[0]["SaleAmount"])
+
+    # Log the top region and its total sales amount for quick reference
+    # Using handy dandy f-strings (formatted string literals).
+    # Format the sales amount as currency with commas and two floating decimal places.
+    LOG.info(f"  Top region: {top_region} (${top_sales:,.2f})")
+
+    LOG.info("Returning DataFrame with total sales by region")
+    return df_region
 
 
-# === Section 8. Create Visualizations ===
+# === Section 2.2 DEFINE A SALES BY CATEGORY FUNCTION ===
+
+# Define a reusable function that takes
+# the products and sales DataFrames as input
+# and returns a DataFrame with total sales by category.
+# A pandas DataFrame is like a sheet - two-dimensional data with rows and columns.
 
 
-def make_plots(df_clean: pd.DataFrame, model: LinearRegression) -> None:
-    """Create charts for the supervised regression case."""
-    LOG.info("Creating chart: hours studied vs score")
+def sales_by_category(
+    df_products: pd.DataFrame,
+    df_sales: pd.DataFrame,
+) -> pd.DataFrame:
+    """Aggregate total sales amount by product category.
 
-    fig, ax = plt.subplots(figsize=(9, 5))
+    WHY: Product category is another key business dimension.
+    Understanding which categories drive revenue helps prioritize
+    inventory, marketing, and purchasing decisions.
 
-    scatter_plt: Axes = sns.scatterplot(
-        data=df_clean,
-        x="hours_studied",
-        y=TARGET_COL,
-        ax=ax,
+    Args:
+        df_products: Products DataFrame with ProductID and Category columns.
+        df_sales: Sales DataFrame with ProductID and SaleAmount columns.
+
+    Returns:
+        DataFrame with Category and SaleAmount columns, sorted by SaleAmount.
+    """
+    LOG.info("Aggregating sales by product category")
+
+    # Make a copy of the sales DataFrame to avoid modifying the original
+    df_sales = df_sales.copy()
+
+    # Convert the SaleAmount column to numeric, coercing errors to NaN ("not a number")
+    df_sales["SaleAmount"] = pd.to_numeric(df_sales["SaleAmount"], errors="coerce")
+
+    # Merge the sales DataFrame with the products DataFrame on ProductID
+    # to get the Category for each sale (like a "left join" in SQL)
+    # A left join means we keep all rows from df_sales and add matching Category values from df_products.
+    df_merged: pd.DataFrame = df_sales.merge(
+        df_products[["ProductID", "Category"]],
+        on="ProductID",
+        how="left",
     )
 
-    scatter_plt.set_title("Hours Studied vs Score (CLOSE chart to continue)")
-    scatter_plt.set_xlabel("Hours Studied")
-    scatter_plt.set_ylabel("Score")
+    # Group the merged DataFrame by Category and sum the SaleAmount for each category.
+    # This returns a Series (a single column of values, one per category).
+    # We cast to Series because we are grouping a single column.
+    grouped: pd.Series = pd.Series(df_merged.groupby("Category")["SaleAmount"].sum())
 
-    LOG.info("Creating chart: model coefficients")
-
-    fig, ax = plt.subplots(figsize=(9, 5))
-
-    LOG.info(f"Got a figure {fig} and axes {ax} from plt.subplots().")
-
-    coefficient_df = pd.DataFrame(
-        {
-            "feature": FEATURE_COLS,
-            "coefficient": model.coef_,
-        }
-    ).sort_values("coefficient", ascending=False)
-
-    bar_plt: Axes = sns.barplot(
-        data=coefficient_df,
-        x="coefficient",
-        y="feature",
-        ax=ax,
+    # Reset the index to turn the Series back into a DataFrame with two columns:
+    # Category and SaleAmount.
+    # Then sort by SaleAmount descending so the highest-revenue category appears first.
+    df_category: pd.DataFrame = grouped.reset_index().sort_values(
+        "SaleAmount", ascending=False
     )
 
-    bar_plt.set_title("Model Coefficients (CLOSE chart to continue)")
-    bar_plt.set_xlabel("Coefficient")
-    bar_plt.set_ylabel("Feature")
+    # Use the built-in dataframe iloc (index location) method
+    # to get the first row of the sorted DataFrame (the category with the highest sales)
+    # as a string.
+    # In Python, we start counting with 0 (no offset from the beginning of the list),
+    # so the first row is at index 0.
+    top_category: str = str(df_category.iloc[0]["Category"])
+
+    # Use the built-in dataframe iloc (index location) method
+    # to get the first row of the sorted DataFrame
+    # (the category with the highest sales)
+    # as a float.
+    top_sales: float = float(df_category.iloc[0]["SaleAmount"])
+
+    # Log the top category and its total sales amount for quick reference
+    # Using handy dandy f-strings (formatted string literals).
+    # Format the sales amount as currency with commas and two floating decimal places.
+    LOG.info(f"  Top category: {top_category} (${top_sales:,.2f})")
+
+    return df_category
 
 
-# === Section 9. Summary and Next Steps ===
+# === Section 2.3 DEFINE A SUMMARIZE FUNCTION ===
+
+# Define a reusable function that takes
+# all 3 dataframes as input and logs a summary of each dataset.
+# A pandas DataFrame is like a sheet - two-dimensional data with rows and columns.
 
 
-def summarize(df: pd.DataFrame, df_clean: pd.DataFrame) -> None:
-    """Log a brief summary."""
+def summarize(
+    df_customers: pd.DataFrame,
+    df_products: pd.DataFrame,
+    df_sales: pd.DataFrame,
+) -> None:
+    """Log a brief summary of all three datasets.
+
+    Args:
+        df_customers: Customers DataFrame.
+        df_products: Products DataFrame.
+        df_sales: Sales DataFrame.
+
+    Returns:
+        None
+    """
     LOG.info("========================")
     LOG.info("SUMMARY")
     LOG.info("========================")
-    LOG.info(f"Dataset: {DATASET_NAME}")
-    LOG.info(f"Original rows: {df.shape[0]}")
-    LOG.info(f"Clean rows: {df_clean.shape[0]}")
-    LOG.info(f"Features: {FEATURE_COLS}")
-    LOG.info(f"Target: {TARGET_COL}")
+
+    # Get the number of rows and columns in each using the shape attribute (0=rows, 1=columns)
+    cust_rows: int = df_customers.shape[0]
+    cust_cols: int = df_customers.shape[1]
+
+    # Get the number of rows and columns in the products DataFrame using the shape attribute (0=rows, 1=columns)
+    prod_rows: int = df_products.shape[0]
+    prod_cols: int = df_products.shape[1]
+
+    # Get the number of rows and columns in the sales DataFrame using the shape attribute (0=rows, 1=columns)
+    sale_rows: int = df_sales.shape[0]
+    sale_cols: int = df_sales.shape[1]
+
+    # Log the summary of each dataset using f-strings (formatted string literals)
+    # Start with an f outside the string, then use curly braces {} to insert variables into the string.
+    LOG.info(f"Customers:  {cust_rows} rows, {cust_cols} columns")
+    LOG.info(f"Products:   {prod_rows} rows, {prod_cols} columns")
+    LOG.info(f"Sales:      {sale_rows} rows, {sale_cols} columns")
+
+    LOG.info("========================")
+    LOG.info("ANALYST NOTES:")
+    LOG.info("Note any data quality issues.")
+    LOG.info("We will clean data later.")
+    LOG.info("========================")
 
 
-# === DEFINE THE MAIN FUNCTION THAT CALLS OTHER FUNCTIONS ===
+# === DEFINE THE MAIN FUNCTION (WHERE THE MAGIC HAPPENS) ===
 
 
 def main() -> None:
-    """Main function to run the supervised ML workflow."""
-    log_header(LOG, "ML")
+    """Main function to run the BI logic.
+    This is where the main logic starts
+    when this script is run.
+    """
 
+    # First, log the header for the BI module to indicate the start of the workflow.
+    log_header(LOG, "BI")
+
+    # Clearly indicate the start of the main function in the logs for easy tracking.
     LOG.info("========================")
     LOG.info("START main()")
     LOG.info("========================")
 
-    LOG.info("Load dataset..............")
-    df = load_data()
+    # Use the imported log_path function to
+    # log the paths of all critical paths and files for reference.
+    log_path(LOG, "Raw data: ", DATA_RAW)
+    log_path(LOG, "Customers:", CUSTOMERS_FILE)
+    log_path(LOG, "Products: ", PRODUCTS_FILE)
+    log_path(LOG, "Sales:    ", SALES_FILE)
 
-    LOG.info("Inspect dataset...........")
-    inspect_basic(df)
+    LOG.info("CALL a function to load each dataset.............")
+    df_customers = load_data(CUSTOMERS_FILE, "customers")
+    df_products = load_data(PRODUCTS_FILE, "products")
+    df_sales = load_data(SALES_FILE, "sales")
 
-    LOG.info("Check data quality........")
-    check_quality(df)
+    LOG.info("CALL a function to get sales by region........")
+    df_region = sales_by_region(df_customers, df_sales)
 
-    LOG.info("Create clean view.........")
-    df_clean = make_clean_view(df)
-
-    LOG.info("Train supervised model....")
-    model = train_model(df_clean)
-
-    LOG.info("Predict one case..........")
-    predict_example(model)
-
-    LOG.info("Create charts.............")
-    make_plots(df_clean, model)
-
-    LOG.info("Summarize workflow........")
-    summarize(df, df_clean)
-
-    LOG.info(
-        "----- in a script, call plt.show() once at the end to display all charts -----"
-    )
-    LOG.info(
-        "----- in a script, CLOSE the chart windows with the close button to CONTINUE -----"
+    LOG.info("CALL a function to plot sales by region........")
+    plot_bar(
+        df=df_region,
+        x="Region",
+        y="SaleAmount",
+        title="Total Sales by Region",
+        xlabel="Region",
+        ylabel="Total Sales Amount ($)",
+        palette="Blues_d",
     )
 
+    LOG.info("CALL a function to get sales by product category........")
+    df_category = sales_by_category(df_products, df_sales)
+
+    LOG.info("CALL a function to plot sales by product category........")
+    plot_bar(
+        df=df_category,
+        x="Category",
+        y="SaleAmount",
+        title="Total Sales by Product Category",
+        xlabel="Category",
+        ylabel="Total Sales Amount ($)",
+        palette="Greens_d",
+    )
+
+    LOG.info("CALL a function to summarize the datasets........")
+    summarize(df_customers, df_products, df_sales)
+
+    LOG.info("CALL a function to show charts........")
     plt.show()
 
     LOG.info("Workflow complete")
-    LOG.info("IMPORTANT: This script creates chart windows.")
-    LOG.info("Close chart windows and terminate this process with CTRL+c as needed.")
+    LOG.info("CLOSE chart windows to continue.")
+    LOG.info("Terminate this process with CTRL+c as needed.")
     LOG.info("========================")
     LOG.info("Executed successfully!")
     LOG.info("========================")
@@ -330,8 +331,7 @@ def main() -> None:
 
 # === CONDITIONAL EXECUTION GUARD ===
 
-# WHY: Only call main() when running this file directly as a script.
-# This is standard Python boilerplate.
-
 if __name__ == "__main__":
+    # This conditional ensures that the main() function is only executed
+    # when this script is run directly, not when it is imported as a module.
     main()

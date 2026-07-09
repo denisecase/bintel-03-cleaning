@@ -1,40 +1,35 @@
-# ml-03-classification
+# bintel-03-cleaning
 
 [![Workflow Guide](https://img.shields.io/badge/Pro--Guide-pro--analytics--02-green)](https://denisecase.github.io/pro-analytics-02/workflow-b-apply-example-project/)
 [![Python 3.14](https://img.shields.io/badge/python-3.14%2B-blue?logo=python)](./pyproject.toml)
 [![MIT](https://img.shields.io/badge/license-see%20LICENSE-yellow.svg)](./LICENSE)
 
-> Professional Python project: building and evaluating classification models.
+> Professional Python project: cleaning and preparing smart sales data for ETVL.
 
 ## Project Description
 
-This project focuses on how to build models that predict a category.
+This project focuses on cleaning raw business data and preparing it
+for the Extract, Transform, Verify, Load (ETVL) process.
+
+We work with a realistic smart sales dataset containing
+customers, products, and sales records with intentional data quality issues.
 
 We learn to:
 
-- train and evaluate a classifier (e.g., decision tree, logistic regression, k-NN)
-- read a confusion matrix and classification report
-- interpret accuracy, precision, recall, and F1
-- choose a model based on the problem and the data
-
-## Example Notebook + Your Notebook
-
-Keep the example notebook as it is.
-Either copy it or use it to build a new notebook that ends in _yourname.
-See [docs/your-files.md] for more.
-
-Links:
-
-- [ml_03_case.ipynb](notebooks/ml_03_case.ipynb)
+- remove duplicate rows and fix invalid values
+- standardize inconsistent text fields (region casing)
+- handle invalid dates and non-numeric sale amounts
+- enforce foreign key integrity across tables
+- verify data quality before and after cleaning
+- save clean prepared data ready for loading to the warehouse
 
 ## Working Files
 
 You'll work with these areas:
 
-- **data/raw** - raw data for exploration (only if you add a dataset)
+- **data/raw** - raw smart sales CSV files (customers, products, sales)
 - **docs/** - project narrative and documentation
 - **src/bizintel/** - the app is an example; run only (no need to modify)
-- **notebooks/** - interactive analysis
 - **pyproject.toml** - update authorship & links
 - **zensical.toml** - update authorship & links
 
@@ -59,8 +54,8 @@ Working through issues is part of implementing professional projects.
 
 ## Success
 
-After completing Phase 1. **Start & Run**, you'll have your own GitHub project,
-with the example notebook executed and committed,
+After completing Phase 1. **Start & Run**,
+you'll have your own GitHub project,
 and running the example module will print out:
 
 ```shell
@@ -83,9 +78,9 @@ open a machine terminal in your `Repos` folder:
 
 ```shell
 # Replace username with YOUR GitHub username.
-git clone https://github.com/username/ml-03-classification
+git clone https://github.com/username/bintel-03-cleaning
 
-cd ml-03-classification
+cd bintel-03-cleaning
 code .
 ```
 
@@ -142,23 +137,9 @@ You accidentally started Python interactive mode.
 It happens.
 Press `Ctrl+c` (both keys together) or `Ctrl+Z` then `Enter` on Windows.
 
-## Example Output (Can Remove this Section after You Verify)
+## Example Output (Remove this Section after You Verify)
 
 ```shell
-| INFO | ML | Summarize workflow........
-| INFO | ML | ========================
-| INFO | ML | SUMMARY
-| INFO | ML | ========================
-| INFO | ML | Dataset: hours_scores_case
-| INFO | ML | Original rows: 10
-| INFO | ML | Clean rows: 10
-| INFO | ML | Features: ['hours_studied', 'practice_quizzes', 'attendance_pct', 'sleep_hours', 'prior_score']
-| INFO | ML | Target: score
-| INFO | ML | ----- in a script, call plt.show() once at the end to display all charts -----
-| INFO | ML | ----- in a script, CLOSE the chart windows with the close button to CONTINUE -----
-| INFO | ML | Workflow complete
-| INFO | ML | IMPORTANT: This script creates chart windows.
-| INFO | ML | Close chart windows and terminate this process with CTRL+c as needed.
 | INFO | ML | ========================
 | INFO | ML | Executed successfully!
 | INFO | ML | ========================
@@ -167,25 +148,21 @@ Press `Ctrl+c` (both keys together) or `Ctrl+Z` then `Enter` on Windows.
 ## Findings and Visuals
 
 Take screenshots of your charts and provide them here with a discussion.
-In Markdown, display a figure by using:
+In Markdown, display a figure using:
 an exclamation mark immediately followed by square brackets containing a useful caption
 immediately followed by parentheses containing the relative path to your figure.
-Note: When you start typing the path with a dot (.) for "here, in this directory",
-the IDE may help complete the path.
 
-In your custom project, follow this example, but
+In your custom project:
 
-- your figures and narrative should reflect your work,
-- this `README.md` should include your commands, process, and visuals, and
-- `docs/index.md` should include your narrative.
+- your figures and narrative should reflect your work
+- this `README.md` should include your commands, process, and visuals
+- `docs/index.md` should include your narrative
 
-Remove unnecessary instructional comments in your custom files.
+Replace these placeholders with screenshots from your own project run:
 
-Update figures to present interesting results from your custom project:
+![Total Sales by Region](./docs/images/Figure_1.png)
 
-![Provide a Useful Caption](./docs/images/Figure_1.png)
-
-![Provide a Useful Caption](./docs/images/Figure_2.png)
+![Total Sales by Product Category](./docs/images/Figure_2.png)
 
 ## Project Documentation
 

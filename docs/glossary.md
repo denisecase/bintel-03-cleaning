@@ -3,87 +3,119 @@
 Use this page to record terms and ideas that help you understand
 professional analytics projects.
 
-This project covers classification: building and evaluating models
-that predict a category from input features.
+This project covers data cleaning and preparation:
+fixing quality issues in raw data and saving clean files ready for ETVL.
 
 Pro-tip: Expand the VS Code **Outline** view (below the navigator on the right)
 to see this file organization at-a-glance.
 
-## Training and Evaluation
+## Data Cleaning
 
-### training set
+### data cleaning
 
-The training set is the portion of data used to fit the model.
-The model sees these examples and adjusts its internal parameters to minimize error.
+Data cleaning is the process of identifying and fixing errors,
+inconsistencies, and missing values in a dataset.
+Clean data is essential for reliable analysis and accurate reporting.
 
-### test set
+### prepared data
 
-The test set is the portion of data held back from training
-and used only to evaluate the model on unseen examples.
-A good test score suggests the model generalizes beyond the training data.
+Prepared data is data that has been cleaned, standardized, and validated.
+It is saved separately from raw data so the original is preserved.
+Prepared data is the input to the ETVL loading stage.
 
-### train-test split
+### standardization
 
-A train-test split divides the dataset into a training portion and a test portion.
-A common split is 80% training and 20% test.
+Standardization converts values in a column to a consistent format.
+For example, converting "East", "east", and "EAST" all to "East".
+Inconsistent values cause errors in grouping, joining, and reporting.
 
-### overfitting
+### deduplication
 
-Overfitting happens when a model learns the training data too closely
-and performs poorly on new, unseen data.
-A large gap between training accuracy and test accuracy is a sign of overfitting.
+Deduplication is the process of identifying and removing duplicate rows.
+A duplicate is a row that is identical to another row in the same table.
+Removing duplicates prevents inflated counts and distorted totals.
 
-### accuracy
+### imputation
 
-Accuracy is the fraction of predictions that are correct.
-It is a useful metric when classes are roughly balanced
-but can be misleading when one class is much more common than others.
+Imputation is the process of filling in missing values with estimated ones.
+Common strategies include filling with the mean, median, or a placeholder.
+The choice of imputation strategy is an analyst decision.
 
-### confusion matrix
+### coercion
 
-A confusion matrix shows how often a classifier predicted each class
-compared to the true class.
-Each row represents the true class; each column represents the predicted class.
-Off-diagonal entries are misclassifications.
+Coercion forces a value into a specific data type.
+`pd.to_numeric(errors='coerce')` converts non-numeric values to NaN
+instead of raising an error.
+Coercion is useful for handling messy real-world data.
 
-### precision
+### foreign key
 
-Precision is the fraction of positive predictions that were actually correct.
-High precision means the model rarely predicts a class when it should not.
+A foreign key is a column in one table that references the primary key
+of another table.
+A sale row with a CustomerID that does not exist in the customers table
+is a foreign key violation and should be removed or flagged.
 
-### recall
+### primary key
 
-Recall is the fraction of actual positives that the model correctly identified.
-High recall means the model rarely misses a true positive.
+A primary key is a column (or set of columns) that uniquely identifies
+each row in a table.
+CustomerID, ProductID, and TransactionID are primary keys in the smart sales data.
 
-### F1 score
+### referential integrity
 
-The F1 score is the harmonic mean of precision and recall.
-It balances both concerns and is useful when false positives and false negatives
-both carry real cost.
+Referential integrity means that every foreign key value in one table
+has a matching primary key in the referenced table.
+Checking referential integrity catches orphaned records before loading.
 
-### classification report
+## Verification
 
-A classification report shows precision, recall, and F1 score
-for each class in the target.
-It gives a fuller picture of model performance than accuracy alone.
+### data validation
 
-## Classification Models
+Data validation checks that data meets expected rules before it is used.
+Examples include checking that prices are positive,
+dates are valid, and required fields are not empty.
 
-### decision tree
+### before and after comparison
 
-A decision tree is a classifier that makes predictions by asking a sequence
-of yes/no questions about feature values.
-It is easy to interpret but can overfit if grown too deep.
+A before and after comparison shows the state of data before and after cleaning.
+Comparing row counts, unique values, and distributions confirms
+that cleaning worked as intended.
 
-### logistic regression
+### assertion
 
-Logistic regression is a linear classifier that estimates the probability
-that an input belongs to each class.
-Despite the name, it is a classification model, not a regression model.
+An assertion is a check in code that verifies a condition is true.
+If the condition is false, the program raises an error.
+Assertions are a simple way to verify data quality at each pipeline stage.
 
-### k-nearest neighbors (k-NN)
+## ETVL Process
 
-k-NN is a classifier that predicts the class of a new point
-by finding the k most similar training examples and taking a majority vote.
-It is simple but can be slow on large datasets.
+### ETVL
+
+ETVL stands for Extract, Transform, Verify, Load.
+It is a structured process for moving data from a source
+into a central data store.
+Verification is the step that distinguishes ETVL from traditional ETL.
+
+### extract
+
+The extract step reads data from a source such as a CSV file,
+a database, or an API.
+In this project, extraction means reading the raw CSV files into DataFrames.
+
+### transform
+
+The transform step converts raw data into the format needed
+for the target system.
+Transformations include cleaning, standardizing, filtering, and reshaping.
+
+### verify
+
+The verify step confirms that transformed data meets quality expectations
+before loading.
+Verification prevents bad data from entering the warehouse.
+
+### load
+
+The load step writes transformed and verified data into the target system.
+In this project, loading means writing prepared CSV files
+to the `data/prepared/` folder.
